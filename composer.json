@@ -1,0 +1,15 @@
+{
+    "name": "blesta/blockonomics",
+    "description": "Accept Bitcoin Payments, each online sale is deposited directly into your wallet. No KYC documentation required.",
+    "license": "proprietary",
+    "type": "blesta-gateway-nonmerchant",
+    "require": {
+        "blesta/composer-installer": "~1.0"
+    },
+    "authors": [
+        {
+            "name": "Phillips Data, Inc.",
+            "homepage": "https://blesta.com/"
+        }
+    ]
+}

@@ -1,0 +1,105 @@
+<ul>
+    <li>
+        <?php
+        $this->Form->label($this->_('Blockonomics.api_key', true), 'api_key');
+        $this->Form->fieldText('api_key', ($meta['api_key'] ?? null), ['id' => 'api_key']);
+        ?>
+    </li>
+    <li>
+        <?php
+        $this->Form->label($this->_('Blockonomics.parent_uid', true), 'parent_uid', ['class' => 'inline']);
+        ?>
+        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('Blockonomics.parent_uid_note');?></div></span>
+
+        <table class="table" id="parent_uid_table">
+            <tbody>
+                <tr class="heading_row">
+                    <td><span>Currency</span></td>
+                    <td class="last"><span><?php $this->_('Blockonomics.parent_uid');?></span></td>
+                </tr>
+                <tr style="display: none">
+                    <td></td>
+                    <td class="last">
+                        <?php
+                        $this->Form->fieldText('parent_uid', null, ['id' => 'parent_uid']);
+                        ?>
+                    </td>
+                </tr>
+                <?php
+                    $i = 0;
+                    foreach ($meta['currencies'] as $currency) {
+                ?>
+                    <tr class="cloned<?php echo ($i % 2 == 1) ? ' odd_row' : '';?>">
+                        <td>
+                            <strong><?php echo $this->Html->safe($currency ?? ''); ?></strong>
+                        </td>
+                        <td class="last">
+                            <?php
+                            $this->Form->fieldText('parent_uid_' . $currency, ($meta['parent_uid_' . $currency] ?? null), ['id' => 'parent_uid_' . $currency]);
+                            ?>
+                        </td>
+                    </tr>
+                <?php
+                        $i++;
+                    }
+                ?>
+            </tbody>
+        </table>
+    </li>
+</ul>
+
+<div class="title_row first">
+    <h3><?php $this->_('Blockonomics.redirect'); ?></h3>
+</div>
+<div class="pad">
+    <p><?php $this->_('Blockonomics.redirect_note'); ?></p>
+    <code><?php echo 'http' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 's' : '') . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost') . WEBDIR . Configure::get('Route.client') . '/pay/received/blockonomics/'; ?></code>
+</div>
+
+<div class="title_row">
+    <h3><?php $this->_('Blockonomics.callback'); ?></h3>
+</div>
+<div class="pad">
+    <p><?php $this->_('Blockonomics.callback_note'); ?></p>
+    <code><?php echo Configure::get('Blesta.gw_callback_url') . Configure::get('Blesta.company_id') . '/blockonomics/'; ?></code>
+</div>
+
+<script type="application/javascript">
+    $(document).ready(function() {
+        $('input[name="currencies[]"]').on('change', function() {
+            updateCurrenciesTable();
+        });
+    });
+
+    function updateCurrenciesTable() {
+        var meta = <?php echo json_encode($meta); ?>;
+
+        // Clear previous currency rows
+        $('#parent_uid_table tr.cloned').remove();
+
+        // Initialize index for tracking row positions
+        var index = 1;
+
+        // Iterate over all checked currencies
+        $('input[name="currencies[]"]:checked').each(function() {
+            var currency_row = $('#parent_uid_table tr:nth-child(2)').clone();
+            var currency = $(this).val();
+
+            currency_row.addClass('cloned');
+            currency_row.css('display', '');
+            currency_row.find('td:first').html('<strong>' + currency + '</strong>');
+            currency_row.find('input[type="text"]').attr('name', 'parent_uid_' + currency);
+            currency_row.find('input[type="text"]').val(meta['parent_uid_' + currency]);
+
+            // Add 'odd_row' class if it's an odd row
+            if ((index + 1) % 2 !== 0) {
+                currency_row.addClass('odd_row');
+            }
+
+            // Append currency row to table
+            $('#parent_uid_table').append(currency_row);
+
+            index++;
+        });
+    }
+</script>

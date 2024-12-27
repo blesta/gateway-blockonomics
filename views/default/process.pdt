@@ -1,0 +1,5 @@
+<a href="" class="blockoPayBtn" data-toggle="modal" data-uid="<?php echo $this->Html->safe($uid ?? ''); ?>">
+    <img width=160 src="https://www.blockonomics.co/img/pay_with_bitcoin_medium.png" />
+</a>
+
+<script src="https://www.blockonomics.co/js/pay_button.js"></script>
