@@ -31,6 +31,8 @@ class BlockonomicsApi
      * @var array The data sent with the last request served by this API
      */
     private $last_request = [];
+    
+    private $logger;
 
     /**
      * Initializes the request parameter
