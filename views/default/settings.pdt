@@ -1,52 +1,62 @@
-<ul>
-    <li>
-        <?php
-        $this->Form->label($this->_('Blockonomics.api_key', true), 'api_key');
-        $this->Form->fieldText('api_key', ($meta['api_key'] ?? null), ['id' => 'api_key']);
-        ?>
-    </li>
-    <li>
-        <?php
-        $this->Form->label($this->_('Blockonomics.parent_uid', true), 'parent_uid', ['class' => 'inline']);
-        ?>
-        <span class="tooltip block"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('Blockonomics.parent_uid_note');?></div></span>
 
-        <table class="table" id="parent_uid_table">
-            <tbody>
-                <tr class="heading_row">
-                    <td><span>Currency</span></td>
-                    <td class="last"><span><?php $this->_('Blockonomics.parent_uid');?></span></td>
-                </tr>
-                <tr style="display: none">
-                    <td></td>
-                    <td class="last">
+<div class="mb-3">
+    <?php
+    $this->Form->label($this->_('Blockonomics.api_key', true), 'api_key', ['class' => 'form-label']);
+    $this->Form->fieldText('api_key', ($meta['api_key'] ?? null), ['id' => 'api_key', 'class' => 'form-control']);
+    ?>
+</div>
+<div class="mb-3">
+    <label class="form-label">
+        <?php $this->_('Blockonomics.parent_uid'); ?>
+        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+           title="<?php echo $this->Html->safe($this->_('Blockonomics.parent_uid_note', true)); ?>"></i>
+    </label>
+
+    <table class="table table-hover mb-0" id="parent_uid_table">
+        <thead>
+            <tr>
+                <th>Currency</th>
+                <th><?php $this->_('Blockonomics.parent_uid');?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="display: none">
+                <td></td>
+                <td>
+                    <?php
+                    $this->Form->fieldText('parent_uid', null, ['id' => 'parent_uid', 'class' => 'form-control']);
+                    ?>
+                </td>
+            </tr>
+            <?php
+                $currencies = $meta['currencies'] ?? [];
+                foreach ($currencies as $currency) {
+            ?>
+                <tr class="cloned">
+                    <td>
+                        <strong><?php echo $this->Html->safe($currency ?? ''); ?></strong>
+                    </td>
+                    <td>
                         <?php
-                        $this->Form->fieldText('parent_uid', null, ['id' => 'parent_uid']);
+                        $this->Form->fieldText('parent_uid_' . $currency, ($meta['parent_uid_' . $currency] ?? null), ['id' => 'parent_uid_' . $currency, 'class' => 'form-control']);
                         ?>
                     </td>
                 </tr>
-                <?php
-                    $i = 0;
-                    foreach ($meta['currencies'] ?? [] as $currency) {
-                ?>
-                    <tr class="cloned<?php echo ($i % 2 == 1) ? ' odd_row' : '';?>">
-                        <td>
-                            <strong><?php echo $this->Html->safe($currency ?? ''); ?></strong>
-                        </td>
-                        <td class="last">
-                            <?php
-                            $this->Form->fieldText('parent_uid_' . $currency, ($meta['parent_uid_' . $currency] ?? null), ['id' => 'parent_uid_' . $currency]);
-                            ?>
-                        </td>
-                    </tr>
-                <?php
-                        $i++;
-                    }
-                ?>
-            </tbody>
-        </table>
-    </li>
-</ul>
+            <?php
+                }
+                if (empty($currencies)) {
+            ?>
+                <tr id="parent_uid_placeholder">
+                    <td colspan="2" class="text-muted">
+                        <?php $this->_('Blockonomics.parent_uid_placeholder'); ?>
+                    </td>
+                </tr>
+            <?php
+                }
+            ?>
+        </tbody>
+    </table>
+</div>
 
 <div class="title_row first">
     <h3><?php $this->_('Blockonomics.redirect'); ?></h3>
@@ -65,41 +75,40 @@
 </div>
 
 <script type="application/javascript">
-    $(document).ready(function() {
-        $('input[name="currencies[]"]').on('change', function() {
-            updateCurrenciesTable();
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input[name="currencies[]"]').forEach(function(el) {
+            el.addEventListener('change', function() {
+                updateCurrenciesTable();
+            });
         });
     });
 
     function updateCurrenciesTable() {
         var meta = <?php echo json_encode($meta); ?>;
 
-        // Clear previous currency rows
-        $('#parent_uid_table tr.cloned').remove();
+        document.querySelectorAll('#parent_uid_table tr.cloned').forEach(function(el) { el.remove(); });
 
-        // Initialize index for tracking row positions
-        var index = 1;
+        var placeholder = document.getElementById('parent_uid_placeholder');
 
-        // Iterate over all checked currencies
-        $('input[name="currencies[]"]:checked').each(function() {
-            var currency_row = $('#parent_uid_table tr:nth-child(2)').clone();
-            var currency = $(this).val();
+        var checked = document.querySelectorAll('input[name="currencies[]"]:checked');
+        if (placeholder) {
+            placeholder.style.display = checked.length > 0 ? 'none' : '';
+        }
 
-            currency_row.addClass('cloned');
-            currency_row.css('display', '');
-            currency_row.find('td:first').html('<strong>' + currency + '</strong>');
-            currency_row.find('input[type="text"]').attr('name', 'parent_uid_' + currency);
-            currency_row.find('input[type="text"]').val(meta['parent_uid_' + currency]);
+        checked.forEach(function(checkbox) {
+            var currency = checkbox.value;
+            var template_row = document.querySelector('#parent_uid_table tbody tr:first-child');
+            var currency_row = template_row.cloneNode(true);
 
-            // Add 'odd_row' class if it's an odd row
-            if ((index + 1) % 2 !== 0) {
-                currency_row.addClass('odd_row');
-            }
+            currency_row.classList.add('cloned');
+            currency_row.style.display = '';
+            currency_row.querySelector('td:first-child').innerHTML = '<strong>' + currency + '</strong>';
 
-            // Append currency row to table
-            $('#parent_uid_table').append(currency_row);
+            var input = currency_row.querySelector('input[type="text"]');
+            input.name = 'parent_uid_' + currency;
+            input.value = meta['parent_uid_' + currency] || '';
 
-            index++;
+            document.querySelector('#parent_uid_table tbody').appendChild(currency_row);
         });
     }
 </script>

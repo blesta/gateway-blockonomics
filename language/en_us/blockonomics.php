@@ -15,6 +15,7 @@ $lang['Blockonomics.!error.api_key.valid'] = 'The API key is not valid.';
 $lang['Blockonomics.api_key'] = 'API Key';
 $lang['Blockonomics.parent_uid'] = 'Parent Product UID';
 $lang['Blockonomics.parent_uid_note'] = 'The UID of a product with the given currency configured in blockonomics. Can be found by creating a product under Buttons & Links > Products > Add A Product and clicking Generate URL.';
+$lang['Blockonomics.parent_uid_placeholder'] = 'Select currencies below to configure their Parent Product UIDs.';
 
 $lang['Blockonomics.redirect'] = 'Blockonomics Redirect';
 $lang['Blockonomics.redirect_note'] = 'Before you start using this gateway you must configure the following url as a Redirect in your Blockonomics account.';

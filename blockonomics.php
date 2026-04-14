@@ -203,6 +203,7 @@ class Blockonomics extends NonmerchantGateway
             'extra_data' => $contact_info['client_id'] . '#' . $amount . '#' . $this->currency . '#' . $this->serializeInvoices($invoice_amounts)
         ];
         $this->log('buildProcess', json_encode($params), 'input', true);
+
         $order = $api->createTemporaryProduct(($this->meta['parent_uid_' . $this->currency] ?? null), $params);
         $response = $order->response();
         $this->log('buildProcess', json_encode($response), 'output', empty($order->errors()));
