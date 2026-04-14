@@ -12,15 +12,17 @@
            title="<?php echo $this->Html->safe($this->_('Blockonomics.parent_uid_note', true)); ?>"></i>
     </label>
 
-    <table class="table" id="parent_uid_table">
-        <tbody>
-            <tr class="heading_row">
-                <td><span>Currency</span></td>
-                <td class="last"><span><?php $this->_('Blockonomics.parent_uid');?></span></td>
+    <table class="table table-hover mb-0" id="parent_uid_table">
+        <thead>
+            <tr>
+                <th>Currency</th>
+                <th><?php $this->_('Blockonomics.parent_uid');?></th>
             </tr>
+        </thead>
+        <tbody>
             <tr style="display: none">
                 <td></td>
-                <td class="last">
+                <td>
                     <?php
                     $this->Form->fieldText('parent_uid', null, ['id' => 'parent_uid', 'class' => 'form-control']);
                     ?>
@@ -28,21 +30,19 @@
             </tr>
             <?php
                 $currencies = $meta['currencies'] ?? [];
-                $i = 0;
                 foreach ($currencies as $currency) {
             ?>
-                <tr class="cloned<?php echo ($i % 2 == 1) ? ' odd_row' : '';?>">
+                <tr class="cloned">
                     <td>
                         <strong><?php echo $this->Html->safe($currency ?? ''); ?></strong>
                     </td>
-                    <td class="last">
+                    <td>
                         <?php
                         $this->Form->fieldText('parent_uid_' . $currency, ($meta['parent_uid_' . $currency] ?? null), ['id' => 'parent_uid_' . $currency, 'class' => 'form-control']);
                         ?>
                     </td>
                 </tr>
             <?php
-                    $i++;
                 }
                 if (empty($currencies)) {
             ?>
@@ -90,8 +90,6 @@
 
         var placeholder = document.getElementById('parent_uid_placeholder');
 
-        var index = 1;
-
         var checked = document.querySelectorAll('input[name="currencies[]"]:checked');
         if (placeholder) {
             placeholder.style.display = checked.length > 0 ? 'none' : '';
@@ -99,7 +97,7 @@
 
         checked.forEach(function(checkbox) {
             var currency = checkbox.value;
-            var template_row = document.querySelector('#parent_uid_table tr:nth-child(2)');
+            var template_row = document.querySelector('#parent_uid_table tbody tr:first-child');
             var currency_row = template_row.cloneNode(true);
 
             currency_row.classList.add('cloned');
@@ -110,12 +108,7 @@
             input.name = 'parent_uid_' + currency;
             input.value = meta['parent_uid_' + currency] || '';
 
-            if ((index + 1) % 2 !== 0) {
-                currency_row.classList.add('odd_row');
-            }
-
-            document.getElementById('parent_uid_table').appendChild(currency_row);
-            index++;
+            document.querySelector('#parent_uid_table tbody').appendChild(currency_row);
         });
     }
 </script>
