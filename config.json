@@ -1,5 +1,5 @@
 {
-    "version": "2.0.0",
+    "version": "2.0.1",
     "name": "Blockonomics.name",
     "description": "Blockonomics.description",
     "authors": [
@@ -175,5 +175,9 @@
         "ZMW",
         "ZWD"
     ],
-    "signup_url": "https://www.blockonomics.co/register"
+    "signup_url": "https://www.blockonomics.co/register",
+    "logo": {
+        "light": "views/default/images/logo.svg",
+        "dark": "views/default/images/logo-dark.svg"
+    }
 }
