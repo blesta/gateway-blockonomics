@@ -1,114 +1,111 @@
-
+<?php $this->Form->fieldHidden('callback_secret', ($meta['callback_secret'] ?? null)); ?>
 <div class="mb-3">
     <?php
     $this->Form->label($this->_('Blockonomics.api_key', true), 'api_key', ['class' => 'form-label']);
-    $this->Form->fieldText('api_key', ($meta['api_key'] ?? null), ['id' => 'api_key', 'class' => 'form-control']);
+    $this->Form->fieldText('api_key', ($meta['api_key'] ?? null), ['id' => 'api_key', 'class' => 'form-control', 'autocomplete' => 'off']);
     ?>
+    <div class="form-text"><?php echo $this->_('Blockonomics.api_key_note', true, $this->Html->safe($api_key_url)); ?></div>
 </div>
+
 <div class="mb-3">
-    <label class="form-label">
-        <?php $this->_('Blockonomics.parent_uid'); ?>
-        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-           title="<?php echo $this->Html->safe($this->_('Blockonomics.parent_uid_note', true)); ?>"></i>
-    </label>
-
-    <table class="table table-hover mb-0" id="parent_uid_table">
-        <thead>
-            <tr>
-                <th>Currency</th>
-                <th><?php $this->_('Blockonomics.parent_uid');?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr style="display: none">
-                <td></td>
-                <td>
-                    <?php
-                    $this->Form->fieldText('parent_uid', null, ['id' => 'parent_uid', 'class' => 'form-control']);
-                    ?>
-                </td>
-            </tr>
-            <?php
-                $currencies = $meta['currencies'] ?? [];
-                foreach ($currencies as $currency) {
-            ?>
-                <tr class="cloned">
-                    <td>
-                        <strong><?php echo $this->Html->safe($currency ?? ''); ?></strong>
-                    </td>
-                    <td>
-                        <?php
-                        $this->Form->fieldText('parent_uid_' . $currency, ($meta['parent_uid_' . $currency] ?? null), ['id' => 'parent_uid_' . $currency, 'class' => 'form-control']);
-                        ?>
-                    </td>
-                </tr>
-            <?php
-                }
-                if (empty($currencies)) {
-            ?>
-                <tr id="parent_uid_placeholder">
-                    <td colspan="2" class="text-muted">
-                        <?php $this->_('Blockonomics.parent_uid_placeholder'); ?>
-                    </td>
-                </tr>
-            <?php
-                }
-            ?>
-        </tbody>
-    </table>
+    <label class="form-label" for="blockonomics_callback_url"><?php $this->_('Blockonomics.callback_url'); ?></label>
+    <div class="input-group">
+        <input type="text" id="blockonomics_callback_url" class="form-control font-monospace" readonly value="<?php echo $this->Html->safe($callback_url ?? ''); ?>">
+        <button type="button" class="btn btn-light" id="blockonomics_copy_callback"><i class="fas fa-copy fa-fw"></i> <?php $this->_('Blockonomics.copy'); ?></button>
+    </div>
 </div>
 
-<div class="title_row first">
-    <h3><?php $this->_('Blockonomics.redirect'); ?></h3>
-</div>
-<div class="pad">
-    <p><?php $this->_('Blockonomics.redirect_note'); ?></p>
-    <code><?php echo 'http' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 's' : '') . '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost') . WEBDIR . Configure::get('Route.client') . '/pay/received/blockonomics/'; ?></code>
-</div>
-
-<div class="title_row">
-    <h3><?php $this->_('Blockonomics.callback'); ?></h3>
-</div>
-<div class="pad">
-    <p><?php $this->_('Blockonomics.callback_note'); ?></p>
-    <code><?php echo Configure::get('Blesta.gw_callback_url') . Configure::get('Blesta.company_id') . '/blockonomics/'; ?></code>
+<div class="mb-3">
+    <button type="button" class="btn btn-light" id="blockonomics_test_setup" data-url="<?php echo $this->Html->safe($test_setup_url ?? ''); ?>">
+        <i class="fas fa-plug fa-fw"></i> <?php $this->_('Blockonomics.test_setup'); ?>
+    </button>
+    <div id="blockonomics_test_result" class="mt-2" style="display: none;"></div>
 </div>
 
-<script type="application/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('input[name="currencies[]"]').forEach(function(el) {
-            el.addEventListener('change', function() {
-                updateCurrenciesTable();
-            });
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        var strings = {
+            copied: <?php echo json_encode($this->_('Blockonomics.copied', true)); ?>,
+            copy: <?php echo json_encode($this->_('Blockonomics.copy', true)); ?>,
+            network: <?php echo json_encode($this->_('Blockonomics.test_setup_network', true)); ?>,
+            no_currency: <?php echo json_encode($this->_('Blockonomics.test_setup.no_currency', true)); ?>
+        };
+
+        var copy_button = document.getElementById('blockonomics_copy_callback');
+        copy_button.addEventListener('click', function () {
+            var input = document.getElementById('blockonomics_callback_url');
+            var done = function () {
+                copy_button.innerHTML = '<i class="fas fa-check fa-fw"></i> ' + strings.copied;
+                setTimeout(function () {
+                    copy_button.innerHTML = '<i class="fas fa-copy fa-fw"></i> ' + strings.copy;
+                }, 2000);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(input.value).then(done);
+            } else {
+                input.select();
+                document.execCommand('copy');
+                done();
+            }
+        });
+
+        var test_button = document.getElementById('blockonomics_test_setup');
+        var result = document.getElementById('blockonomics_test_result');
+        var form = test_button.closest('form');
+
+        var show = function (type, html) {
+            result.className = 'mt-2 alert ' + (type === 'setup' ? 'border bg-transparent' : 'alert-' + type);
+            result.innerHTML = html;
+            result.style.display = '';
+        };
+        var escape = function (text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        var render = function (text) {
+            return escape(text).replace(
+                /\[([^\]]+)\]\((https:\/\/www\.blockonomics\.co[^)\s]*)\)/g,
+                '<a href="$2" target="_blank" rel="noopener">$1</a>'
+            );
+        };
+
+        // Saves the form the same way "Update Settings" does, then tests the saved settings
+        test_button.addEventListener('click', function () {
+            test_button.disabled = true;
+            result.style.display = 'none';
+
+            fetch(form.getAttribute('action') || window.location.href, {method: 'POST', credentials: 'same-origin', body: new FormData(form)})
+                .then(function (response) {
+                    return response.text().then(function (html) {
+                        var page = new DOMParser().parseFromString(html, 'text/html');
+                        var error = page.querySelector('.alert-danger');
+                        if (error) {
+                            throw {message: error.textContent.trim()};
+                        }
+                    });
+                })
+                .then(function () {
+                    return fetch(test_button.getAttribute('data-url'), {method: 'POST', credentials: 'same-origin'});
+                })
+                .then(function (response) { return response.json(); })
+                .then(function (data) {
+                    if (data.status === 'ok') {
+                        var html = '<span class="fw-bold">BTC</span> <span class="text-success">&#10004;</span>';
+                        if (!form.querySelector('input[name="currencies[]"]:checked')) {
+                            html += '<div class="text-body mt-2">' + escape(strings.no_currency) + '</div>';
+                        }
+                        show('success', html);
+                    } else {
+                        show(data.status === 'setup' ? 'setup' : 'danger', render(data.message || strings.network));
+                    }
+                })
+                .catch(function (error) {
+                    show('danger', escape(error && error.message ? error.message : strings.network));
+                })
+                .finally(function () {
+                    test_button.disabled = false;
+                });
         });
     });
-
-    function updateCurrenciesTable() {
-        var meta = <?php echo json_encode($meta); ?>;
-
-        document.querySelectorAll('#parent_uid_table tr.cloned').forEach(function(el) { el.remove(); });
-
-        var placeholder = document.getElementById('parent_uid_placeholder');
-
-        var checked = document.querySelectorAll('input[name="currencies[]"]:checked');
-        if (placeholder) {
-            placeholder.style.display = checked.length > 0 ? 'none' : '';
-        }
-
-        checked.forEach(function(checkbox) {
-            var currency = checkbox.value;
-            var template_row = document.querySelector('#parent_uid_table tbody tr:first-child');
-            var currency_row = template_row.cloneNode(true);
-
-            currency_row.classList.add('cloned');
-            currency_row.style.display = '';
-            currency_row.querySelector('td:first-child').innerHTML = '<strong>' + currency + '</strong>';
-
-            var input = currency_row.querySelector('input[type="text"]');
-            input.name = 'parent_uid_' + currency;
-            input.value = meta['parent_uid_' + currency] || '';
-
-            document.querySelector('#parent_uid_table tbody').appendChild(currency_row);
-        });
-    }
 </script>

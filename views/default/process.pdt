@@ -1,5 +1,249 @@
-<a href="" class="blockoPayBtn" data-toggle="modal" data-uid="<?php echo $this->Html->safe($uid ?? ''); ?>">
-    <img width=160 src="https://www.blockonomics.co/img/pay_with_bitcoin_medium.png" />
-</a>
+<?php if (!empty($error)) { ?>
+<div class="alert alert-danger mb-0">
+    <?php echo $this->Html->safe($error); ?>
+    <a href="" class="alert-link"><?php $this->_('Blockonomics.process.reload'); ?></a>
+</div>
+<?php return; } ?>
+<div class="blockonomics-pay">
+    <style>
+    .blockonomics-pay{width:100%;max-width:440px;margin:0 auto;text-align:center}
+    .blk-card{border:1px solid var(--bs-border-color,#e6e7e9);border-radius:12px;overflow:hidden;background:var(--bs-body-bg,#fff)}
+    .blk-bar{display:flex;align-items:center;justify-content:center;gap:.55em;padding:.7em 1em;font-weight:600;font-size:.95em;background:#188433;color:#fff}
+    .blk-bar[data-mode="neutral"]{background:var(--bs-tertiary-bg,#f2f4f6);color:var(--bs-body-color,#1d273b)}
+    .blk-bar[data-mode="warn"]{background:#b26205;color:#fff}
+    .blk-spin{width:.9em;height:.9em;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:blkspin .9s linear infinite;flex:none}
+    @keyframes blkspin{to{transform:rotate(360deg)}}
+    .blk-body{padding:1em 1.25em 1.15em}
+    .blk-row{display:flex;justify-content:space-between;align-items:center;gap:1em;padding:.6em 0;border-bottom:1px solid var(--bs-border-color,#eceef0);font-size:.95em}
+    .blk-row-last{border-bottom:0}
+    .blk-coin{display:flex;align-items:center;gap:.45em;font-weight:600}
+    .blk-inline{display:inline-flex;align-items:center;gap:.2em}
+    .blk-small{font-size:.8em}
+    .blk-muted{color:var(--bs-secondary-color,#68727f)}
+    .blk-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+    .blk-label{display:block;text-align:left;font-size:.75em;letter-spacing:.04em;text-transform:uppercase;margin:1em 0 .3em;color:var(--bs-secondary-color,#68727f)}
+    .blk-field{border:1px solid var(--bs-border-color,#e6e7e9);border-radius:8px;padding:.5em .6em;display:flex;align-items:center;gap:.5em;background:var(--bs-tertiary-bg,#f8f9fa)}
+    .blk-field > span{flex:1;min-width:0;text-align:left;font-size:.86em}
+    .blk-copy{border:0;background:transparent;cursor:pointer;color:var(--bs-secondary-color,#68727f);padding:.1em .3em;border-radius:6px;flex:none;line-height:1}
+    .blk-copy:hover{background:var(--bs-border-color,#e6e7e9)}
+    .blk-copy .blk-ic-check{display:none;color:#188433}
+    .blk-copy.blk-copied .blk-ic-copy{display:none}
+    .blk-copy.blk-copied .blk-ic-check{display:inline}
+    .blk-qr{background:#fff;border:1px solid var(--bs-border-color,#e6e7e9);border-radius:10px;padding:12px;display:inline-block;line-height:0;margin:.9em auto .2em}
+    .blk-qr img{margin:0 auto}
+    .blk-note{font-size:.8em;margin:.8em 0 0}
+    .blk-banner{background:#fff8e6;color:#664d03;padding:.65em .8em;border-radius:8px;margin:.4em 0 .8em;font-size:.88em;text-align:left}
+    </style>
+    <div class="blk-card" data-order-id="<?php echo (int) $order->id; ?>" data-txid="<?php echo $this->Html->safe($order->txid ?? ''); ?>">
+        <div class="blk-bar" id="blk-bar" data-mode="neutral"><span class="blk-spin" id="blk-bar-spin"></span><span id="blk-bar-text"></span></div>
+        <div class="blk-body">
+            <?php if ($underpaid) { ?>
+            <div class="blk-banner"><?php $this->_('Blockonomics.process.banner_underpaid'); ?></div>
+            <?php } ?>
+            <div id="blk-payment"<?php echo $awaiting ? ' style="display:none"' : ''; ?>>
+                <div class="blk-row">
+                    <span class="blk-muted"><?php $this->_('Blockonomics.process.pay_with'); ?></span>
+                    <span class="blk-coin">
+                        <img src="<?php echo $this->Html->safe($assets_url); ?>images/btc.svg" width="20" height="20" alt="">
+                        <?php $this->_('Blockonomics.process.bitcoin'); ?>
+                    </span>
+                </div>
+                <div class="blk-row blk-row-last">
+                    <span class="blk-muted"><?php $this->_('Blockonomics.process.amount'); ?></span>
+                    <span class="text-end">
+                        <span class="blk-inline">
+                            <span class="blk-mono fw-semibold"><?php echo $this->Html->safe($btc_amount); ?> BTC</span>
+                            <button type="button" class="blk-copy" data-copy="<?php echo $this->Html->safe($btc_amount); ?>" title="<?php $this->_('Blockonomics.process.copy_amount'); ?>"><span class="blk-ic-copy">&#10697;</span><span class="blk-ic-check">&#10004;</span></button>
+                        </span><br>
+                        <span class="blk-muted blk-small"><?php echo $this->Html->safe($fiat_amount); ?> &middot; 1 BTC = <?php echo $this->Html->safe($rate); ?></span>
+                    </span>
+                </div>
+                <div class="blk-qr"><div id="blk-qr" data-uri="<?php echo $this->Html->safe($uri); ?>"></div></div>
+                <span class="blk-label"><?php $this->_('Blockonomics.process.address'); ?></span>
+                <div class="blk-field">
+                    <span class="blk-mono"><?php echo $this->Html->safe($order->address); ?></span>
+                    <button type="button" class="blk-copy" data-copy="<?php echo $this->Html->safe($order->address); ?>" title="<?php $this->_('Blockonomics.process.copy_address'); ?>"><span class="blk-ic-copy">&#10697;</span><span class="blk-ic-check">&#10004;</span></button>
+                </div>
+                <a class="btn btn-primary w-100 mt-3" href="<?php echo $this->Html->safe($uri); ?>"><?php $this->_('Blockonomics.process.open_wallet'); ?></a>
+                <p class="blk-note blk-muted"><?php $this->_('Blockonomics.process.confirmations_note', false, $confirmations); ?></p>
+            </div>
+            <div id="blk-waiting"<?php echo $awaiting ? '' : ' style="display:none"'; ?>>
+                <p id="blk-status" class="mt-3 mb-0"><?php $this->_('Blockonomics.process.status_detected', false, $confirmations); ?></p>
+                <p class="blk-muted blk-small mt-2 mb-0"><?php $this->_('Blockonomics.process.txid'); ?> <span id="blk-txid" class="blk-mono"></span></p>
+                <p id="blk-substatus" class="blk-muted mt-3 mb-0"></p>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="<?php echo $this->Html->safe($assets_url); ?>js/qrcode.min.js"></script>
+    <script type="text/javascript" src="<?php echo $this->Html->safe($assets_url); ?>js/reconnecting-websocket.min.js"></script>
+    <script type="text/javascript">
+    (function () {
+        var STATUS_URL = <?php echo json_encode($status_url); ?>;
+        var RETURN_URL = <?php echo json_encode($return_url); ?>;
+        var REQUIRED = <?php echo (int) $confirmations; ?>;
+        var ADDRESS = <?php echo json_encode($order->address); ?>;
+        var TEXT = <?php echo json_encode([
+            'awaiting' => $this->_('Blockonomics.process.bar_awaiting', true),
+            'detected' => $this->_('Blockonomics.process.bar_detected', true),
+            'confirming' => $this->_('Blockonomics.process.bar_confirming', true),
+            'paid' => $this->_('Blockonomics.process.bar_paid', true),
+            'underpaid' => $this->_('Blockonomics.process.bar_underpaid', true),
+            'status_paid' => $this->_('Blockonomics.process.status_paid', true),
+            'status_underpaid' => $this->_('Blockonomics.process.status_underpaid', true),
+            'status_stopped' => $this->_('Blockonomics.process.status_stopped', true),
+            'connection' => $this->_('Blockonomics.process.connection', true)
+        ]); ?>;
 
-<script src="https://www.blockonomics.co/js/pay_button.js"></script>
+        var root = document.querySelector('.blockonomics-pay');
+        var card = root.querySelector('.blk-card');
+        var ORDER_ID = card.getAttribute('data-order-id');
+        var payment = document.getElementById('blk-payment');
+        var waiting = document.getElementById('blk-waiting');
+        var bar = document.getElementById('blk-bar');
+        var barText = document.getElementById('blk-bar-text');
+        var barSpin = document.getElementById('blk-bar-spin');
+        var statusEl = document.getElementById('blk-status');
+        var substatusEl = document.getElementById('blk-substatus');
+        var txidEl = document.getElementById('blk-txid');
+        var timer = null;
+        var startedAt = Date.now();
+        var failures = 0;
+        var detected = payment.style.display === 'none';
+
+        function setBar(mode, text, spin) {
+            bar.setAttribute('data-mode', mode);
+            barText.textContent = text;
+            barSpin.style.display = spin ? '' : 'none';
+        }
+        function setTxid(txid) {
+            if (!txid) { txidEl.parentElement.style.display = 'none'; return; }
+            card.setAttribute('data-txid', txid);
+            var label = txid.length > 20 ? txid.substring(0, 10) + '…' + txid.substring(txid.length - 6) : txid;
+            txidEl.textContent = '';
+            // Test-mode txids are not on the blockchain, so only real ones link to the explorer
+            if (txid.indexOf('TestBTCTxid') === 0) {
+                txidEl.textContent = label;
+            } else {
+                var link = document.createElement('a');
+                link.href = 'https://www.blockonomics.co/#/search?q=' + encodeURIComponent(txid);
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.textContent = label;
+                txidEl.appendChild(link);
+            }
+            txidEl.parentElement.style.display = '';
+        }
+        function showWaiting(txid) {
+            detected = true;
+            payment.style.display = 'none';
+            waiting.style.display = '';
+            setTxid(txid || card.getAttribute('data-txid'));
+            setBar('await', TEXT.detected, true);
+        }
+        function schedule(delay) {
+            if (timer) { clearTimeout(timer); }
+            timer = setTimeout(poll, delay);
+        }
+
+        root.addEventListener('click', function (e) {
+            var btn = e.target.closest('.blk-copy');
+            if (!btn) { return; }
+            var value = btn.getAttribute('data-copy') || '';
+            var copied = navigator.clipboard && navigator.clipboard.writeText
+                ? navigator.clipboard.writeText(value)
+                : new Promise(function (resolve) {
+                    var ta = document.createElement('textarea');
+                    ta.value = value;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch (err) {}
+                    document.body.removeChild(ta);
+                    resolve();
+                });
+            copied.then(function () {
+                btn.classList.add('blk-copied');
+                setTimeout(function () { btn.classList.remove('blk-copied'); }, 1600);
+            });
+        });
+
+        function handleStatus(data) {
+            if (data.txid) { setTxid(data.txid); }
+            if (data.paid) {
+                showWaiting(data.txid);
+                setBar('paid', TEXT.paid, false);
+                statusEl.textContent = TEXT.status_paid;
+                if (RETURN_URL) {
+                    setTimeout(function () {
+                        window.location = RETURN_URL + (RETURN_URL.indexOf('?') === -1 ? '?' : '&') + 'order_id=' + encodeURIComponent(ORDER_ID);
+                    }, 1500);
+                }
+                return;
+            }
+            if (data.underpaid) {
+                showWaiting(data.txid);
+                setBar('warn', TEXT.underpaid, false);
+                statusEl.textContent = TEXT.status_underpaid;
+                return;
+            }
+            if (data.status === null || typeof data.status === 'undefined') {
+                schedule(30000);
+                return;
+            }
+            if (!detected) { showWaiting(data.txid); }
+            if (Date.now() - startedAt >= 24 * 60 * 60 * 1000) {
+                statusEl.textContent = TEXT.status_stopped;
+                return;
+            }
+            setBar('await', TEXT.confirming.replace('%1$s', Math.min(data.status, REQUIRED)).replace('%2$s', REQUIRED), true);
+            schedule(Date.now() - startedAt < 10 * 60 * 1000 ? 10000 : 30000);
+        }
+
+        function poll() {
+            if (document.hidden) { return; }
+            var body = new URLSearchParams();
+            body.append('order_id', ORDER_ID);
+            fetch(STATUS_URL, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                body: body.toString()
+            }).then(function (r) { return r.json(); }).then(function (data) {
+                if (data.error) { throw new Error(data.error); }
+                failures = 0;
+                substatusEl.textContent = '';
+                handleStatus(data);
+            }).catch(function () {
+                failures++;
+                if (failures >= 3) { substatusEl.textContent = TEXT.connection; }
+                schedule(30000);
+            });
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) { poll(); }
+        });
+
+        if (detected) {
+            setTxid(card.getAttribute('data-txid'));
+            setBar('await', TEXT.detected, true);
+            poll();
+        } else {
+            var qr = document.getElementById('blk-qr');
+            if (window.QRCode) { new QRCode(qr, { text: qr.getAttribute('data-uri'), width: 190, height: 190 }); }
+            setBar('await', TEXT.awaiting, true);
+            if (window.ReconnectingWebSocket) {
+                var ws = new ReconnectingWebSocket('wss://www.blockonomics.co/payment/' + ADDRESS);
+                ws.onmessage = function (event) {
+                    ws.close();
+                    var txid = '';
+                    try { txid = String(JSON.parse(event.data).txid || ''); } catch (e) {}
+                    showWaiting(txid);
+                    startedAt = Date.now();
+                    poll();
+                };
+            }
+            schedule(30000);
+        }
+    })();
+    </script>
+</div>

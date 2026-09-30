@@ -1,11 +1,15 @@
 {
-    "version": "2.0.1",
+    "version": "2.1.0",
     "name": "Blockonomics.name",
     "description": "Blockonomics.description",
     "authors": [
         {
             "name": "Phillips Data, Inc.",
             "url": "https://blesta.com/"
+        },
+        {
+            "name": "Blockonomics",
+            "url": "https://www.blockonomics.co/"
         }
     ],
     "currencies": [
@@ -30,10 +34,8 @@
         "BOB",
         "BRL",
         "BSD",
-        "BTC",
         "BTN",
         "BWP",
-        "BYR",
         "BZD",
         "CAD",
         "CDF",
@@ -42,7 +44,6 @@
         "CNY",
         "COP",
         "CRC",
-        "CUC",
         "CUP",
         "CVE",
         "CZK",
@@ -51,14 +52,12 @@
         "DOP",
         "DZD",
         "EGP",
-        "ERN",
         "ETB",
         "EUR",
         "FJD",
         "FKP",
         "GBP",
         "GEL",
-        "GGP",
         "GHS",
         "GIP",
         "GMD",
@@ -72,7 +71,6 @@
         "HUF",
         "IDR",
         "ILS",
-        "IMP",
         "INR",
         "IQD",
         "IRR",
@@ -95,8 +93,6 @@
         "LKR",
         "LRD",
         "LSL",
-        "LTL",
-        "LVL",
         "LYD",
         "MAD",
         "MDL",
@@ -105,7 +101,6 @@
         "MMK",
         "MNT",
         "MOP",
-        "MRO",
         "MUR",
         "MVR",
         "MWK",
@@ -140,9 +135,7 @@
         "SHP",
         "SLL",
         "SOS",
-        "SPL",
         "SRD",
-        "STD",
         "SVC",
         "SYP",
         "SZL",
@@ -153,7 +146,6 @@
         "TOP",
         "TRY",
         "TTD",
-        "TVD",
         "TWD",
         "TZS",
         "UAH",
@@ -167,13 +159,11 @@
         "WST",
         "XAF",
         "XCD",
-        "XDR",
         "XOF",
         "XPF",
         "YER",
         "ZAR",
-        "ZMW",
-        "ZWD"
+        "ZMW"
     ],
     "signup_url": "https://www.blockonomics.co/register",
     "logo": {
